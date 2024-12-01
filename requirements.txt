@@ -1,0 +1,15 @@
+fastapi[all]
+uvicorn
+sqlalchemy
+pymysql 
+databases 
+alembic
+aiomysql
+async-exit-stack
+async-generator
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+python-dotenv
+celery[redis]
+celery[beat]
