@@ -9,7 +9,7 @@ class WebhookSchema(BaseModel):
     headers: Optional[Dict[str, str]] = None  # Optional headers for the webhook request
     body: Optional[Dict[str, str]] = None  # JSON data as a string
 
-class TaskSchema(BaseModel): 
+class TaskRequest(BaseModel): 
     name: str  # Unique job identifier
     scheduled_time: datetime  # Scheduled time in ISO 8601 format
     cron: Optional[str] = None  # Cron expression (e.g., "*/5 * * * *")
