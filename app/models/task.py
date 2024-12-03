@@ -10,7 +10,7 @@ class Task(Base):
     cron = Column(String(255), nullable=True)  
     timezone = Column(String(255), nullable=True)  
     active = Column(Boolean, default=True)  
-    webhook = relationship("Webhook", uselist=False, back_populates="task")
+    webhook = relationship("Webhook", uselist=False, back_populates="task", cascade="all, delete-orphan")
 
     class Config:
         orm_mode = True
