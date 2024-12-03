@@ -1,7 +1,8 @@
+from fastapi import HTTPException
+import requests
 import json
 from app.models.webhook import Webhook
 from app.schemas.task_schema import TaskSchema
-import requests
 from app.celery import scheduler
 from celery.schedules import crontab
 from sqlalchemy.orm import Session
@@ -23,7 +24,6 @@ def create(db: Session, data: TaskSchema):
         task = Task(**task_data)
         db.add(task)
         db.commit()
-        schedule_task(task_data, db)
         return {"status": "success", "message": "Task created and scheduled successfully"}
     finally:
         db.close()
@@ -32,7 +32,7 @@ def update(db: Session, task_id: str, updated_data: dict):
     """Edit an existing task and update its schedule."""
     task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
-        return {"status": "error", "message": "Task not found"}
+        raise HTTPException(status_code=404, detail={ "message": "Not found" })
 
     for key, value in updated_data.items():
         setattr(task, key, value)
@@ -47,7 +47,7 @@ def destroy(db: Session, task_id: str, is_recurring: bool = False):
     task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
         db.close()
-        return {"status": "error", "message": "Task not found"}
+        raise HTTPException(status_code=404, detail={ "message": "Not found" })
 
     db.delete(task)
     db.commit()
@@ -59,7 +59,17 @@ def list(db: Session):
     """List all tasks."""
     tasks = db.query(Task).all()
     db.close()
-    return [task.to_dict() for task in tasks]
+    return [task for task in tasks]
+
+def find(db: Session, task_id: str):
+    """Retrieve a task by ID."""
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        db.close()
+        raise HTTPException(status_code=404, detail={ "message": "Not found" })
+    
+    db.close()
+    return task
 
 def results(db: Session, task_id: str):
     """Retrieve all execution results for a given task."""
@@ -74,7 +84,7 @@ def execute_task(task_id: str):
 
     if not task:
         db.close()
-        return {"status": "error", "message": "Task not found"}
+        raise HTTPException(status_code=404, detail={ "message": "Not found" })
 
     webhook = task.webhook_url
     headers = json.loads(task.headers) if task.headers else {}

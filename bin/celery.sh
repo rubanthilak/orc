@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python -m celery -A app.celery.scheduler beat --loglevel=info
+python3 -m celery -A app.celery.scheduler beat --loglevel=info

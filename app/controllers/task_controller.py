@@ -12,6 +12,10 @@ router = APIRouter()
 async def list_tasks_route(db: Session = Depends(client)):
     return TaskService.list(db)
 
+@router.get("/{task_id}")
+async def list_tasks_route(task_id: str, db: Session = Depends(client)):
+    return TaskService.find(db, task_id)
+
 @router.post("/", status_code=201)
 async def create_task_route(data: TaskSchema, db: Session = Depends(client)):
     return TaskService.create(db, data)
