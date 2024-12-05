@@ -1,6 +1,6 @@
 import requests
 import json
-from app.celery import scheduler
+from bg.celery import scheduler
 from celery.schedules import crontab
 from sqlalchemy.orm import Session
 from db.client import SessionLocal
@@ -11,7 +11,7 @@ from datetime import datetime
 # Task to trigger webhooks and save the result to the database
 def execute_task(task_id: str):
     db: Session = SessionLocal()
-    task = db.query(Task).filter(Task.task_id == task_id).first()
+    task = db.query(Task).filter(Task.id == task_id).first()
 
     if not task:
         db.close()
