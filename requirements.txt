@@ -13,3 +13,4 @@ python-multipart
 python-dotenv
 celery[redis]
 celery[beat]
+flower

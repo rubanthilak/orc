@@ -11,3 +11,6 @@ class TaskResult(Base):
     response_headers = Column(Text, nullable=True)  
     timestamp = Column(DateTime, nullable=False)  
     error = Column(Text, nullable=True)  
+
+    class Config:
+        orm_mode = True

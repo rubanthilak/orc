@@ -11,5 +11,5 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create engine and metadata
 database = Database(DATABASE_URL)
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=True)
 metadata = MetaData()

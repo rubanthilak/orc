@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload

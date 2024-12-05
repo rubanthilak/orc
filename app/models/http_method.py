@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy import Column, Enum as SQLAlchemyEnum
+from sqlalchemy import Enum as SQLAlchemyEnum
 
 class HttpMethod(Enum):
     GET = "GET"
