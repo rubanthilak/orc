@@ -3,7 +3,7 @@ from typing import Optional, Dict
 from datetime import datetime
 from app.models.http_method import HttpMethod
 
-class WebhookSchema(BaseModel):
+class WebhookRequest(BaseModel):
     url: str  # Webhook URL to trigger
     method: HttpMethod  # HTTP method
     headers: Optional[Dict[str, str]] = None  # Optional headers for the webhook request
@@ -14,7 +14,7 @@ class TaskRequest(BaseModel):
     scheduled_time: datetime  # Scheduled time in ISO 8601 format
     cron: Optional[str] = None  # Cron expression (e.g., "*/5 * * * *")
     timezone: Optional[str] = "UTC"  # Optional timezone, defaults to UTC
-    webhook: WebhookSchema  # Webhook to be triggered
+    webhook: WebhookRequest  # Webhook to be triggered
     active: Optional[bool] = True # Optional active status
 
     class Config:

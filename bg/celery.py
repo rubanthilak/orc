@@ -9,4 +9,8 @@ init()
 REDIS_URL = os.getenv("REDIS_URL")
 
 # Create a Celery instance
-scheduler = Celery("scheduler", broker=REDIS_URL)
+scheduler = Celery(
+    "scheduler", 
+    broker=REDIS_URL, 
+    backend=REDIS_URL,
+    broker_connection_retry_on_startup = True)

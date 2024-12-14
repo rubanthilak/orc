@@ -1,82 +1,76 @@
-import requests
-import json
 from bg.celery import scheduler
 from celery.schedules import crontab
-from sqlalchemy.orm import Session
-from db.client import SessionLocal
-from app.models.task import Task
-from app.models.result import TaskResult
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
-# Task to trigger webhooks and save the result to the database
-def execute_task(task_id: str):
-    db: Session = SessionLocal()
-    task = db.query(Task).filter(Task.id == task_id).first()
-
-    if not task:
-        db.close()
-        return
-
-    webhook = task.webhook_url
-    headers = json.loads(task.headers) if task.headers else {}
-
-    try:
-        response = requests.post(webhook, json=json.loads(task.data), headers=headers)
-        save_task_result(db, task_id, response)
-        db.commit()
-        return {"status": "success", "response_code": response.status_code}
-    except Exception as e:
-        save_task_result(db, task_id, None, error=str(e))
-        db.commit()
-        return {"status": "error", "message": str(e)}
-    finally:
-        db.close()
-
-def save_task_result(db: Session, task_id: str, response=None, error=None):
-    """Save the result of task execution to the database."""
-    task_result = TaskResult(
-        task_id=task_id,
-        status_code=response.status_code if response else None,
-        response_body=response.text if response else None,
-        headers=json.dumps(dict(response.headers)) if response else None,
-        error=error,
-        executed_at=datetime.utcnow(),
-    )
-    db.add(task_result)
-
-def schedule_task(task_data: dict):
-    """Schedule a task based on task_data either as a one-time or recurring task."""
-    task_id = task_data["task_id"]
-    scheduled_time = task_data["scheduled_time"]
-    recurring = task_data.get("recurring")
-
-    if recurring:
-        cron = recurring["cron"]
-        timezone = recurring.get("timezone", "UTC")
+def enqueue(task: callable, kwargs: dict, scheduled_time: str = None, cron: str = None):
+    """Add a scheduled task to Celery Beat."""
+    task_id = kwargs["task_id"]
+    scheduled_time = scheduled_time if scheduled_time != None else (datetime.now() + timedelta(minutes=5)).isoformat()
+    if cron != None:
         scheduler.add_periodic_task(
-            crontab.from_string(cron),
-            execute_task.s(task_id),
-            name=f"cron_{task_id}",
-            options={"expires": None}
+            crontab(cron), 
+            task.s(**kwargs), 
+            f"cron_{task.__name__}_{task_id}"
         )
     else:
-        execute_task.apply_async((task_id,), eta=datetime.fromisoformat(scheduled_time))
-
-def delete_scheduled_task(task_id: str, is_recurring: bool = False):
+        scheduler.add_periodic_task(
+            datetime.fromisoformat(scheduled_time).replace(tzinfo=timezone.utc),
+            task.s(**kwargs), 
+            f"{task.__name__}_{task_id}"
+        )
+    
+def dequeue(task_name: str, task_id: str, is_recurring: bool = False):
     """Remove a scheduled task from Celery Beat or revoke a one-time task."""
     if is_recurring:
-        revoke_recurring_task(f"cron_{task_id}")
+        dequeue_recurring_task(f"cron_{task_name}_{task_id}")
     else:
-        scheduler.control.revoke(task_id, terminate=True)
+        scheduler.control.revoke(f"{task_name}_{task_id}", terminate=True)
 
-def revoke_recurring_task(task_name: str):
+def dequeue_recurring_task(task_name: str):
     """Revoke a recurring task by its name."""
-    from celery import current_app
-    beat_schedule = current_app.control.inspect().scheduled()
+    beat_schedule = scheduler.control.inspect().scheduled()
 
     if beat_schedule:
-        for worker, tasks in beat_schedule.items():
+        for _worker, tasks in beat_schedule.items():
             for task in tasks:
                 if task["name"] == task_name:
                     scheduler.control.revoke(task["id"], terminate=True)
                     print(f"Recurring task '{task_name}' revoked.")
+
+from celery import signature
+
+def schedule_task(task, args, scheduled_time=None, cron_string=None):
+    """
+    Schedule a task to run at a specified time or with a cron string.
+
+    Args:
+        task (str): The name of the task to schedule.
+        args (tuple): The arguments to pass to the task.
+        scheduled_time (datetime, optional): The time to schedule the task to run. Defaults to None.
+        cron_string (str, optional): The cron string to use to schedule the task. Defaults to None.
+
+    Returns:
+        None
+
+    Usage:
+  
+        from datetime import datetime
+
+        app = Celery('tasks', broker='amqp://guest@localhost//')
+        task_name = 'my_task'
+        args = (1, 2, 3)
+        scheduled_time = datetime(2023, 3, 15, 14, 30)  # March 15, 2023 at 2:30 PM
+        cron_string = '0 8 * * *'  # Run every day at 8am
+
+        schedule_task(app, task_name, args, scheduled_time, cron_string)
+    """
+    if cron_string:
+        # Use the cron string to schedule the task
+        scheduler.add_periodic_task(crontab(cron_string), task, args=args)
+    elif scheduled_time:
+        # Use the scheduled time to schedule the task
+        scheduler.add_periodic_task(scheduled_time, task, args=args)
+    else:
+        # Enqueue the task after 5 minutes if no scheduled time or cron string is provided
+        enqueue_time = datetime.now() + timedelta(seconds=10)
+        scheduler.add_periodic_task(enqueue_time, signature(task, args=args), name=task)
