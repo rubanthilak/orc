@@ -14,5 +14,5 @@ python-dotenv
 celery[redis]
 celery[beat]
 flower
-pytz
-redis
+sqlalchemy-celery-beat
+mysql-connector
