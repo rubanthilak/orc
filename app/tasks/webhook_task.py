@@ -1,6 +1,3 @@
-from fastapi import Depends
-from bg.celery import scheduler
-from sqlalchemy.orm import Session
 from app.services.webhook_service import trigger_webhook
 from db.client import SessionLocal
 from celery import shared_task

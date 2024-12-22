@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python -m celery -A bg.main.scheduler worker -E -l info
+python -m celery -A app.main.scheduler worker -E -l info
