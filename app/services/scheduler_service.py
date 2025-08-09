@@ -2,7 +2,9 @@ from app.celery import scheduler
 from celery.schedules import crontab
 from datetime import datetime, timedelta, timezone
 
-def enqueue(task: callable, kwargs: dict, scheduled_time: str = None, cron: str = None):
+from typing import Optional
+
+def enqueue(task: callable, kwargs: dict, scheduled_time: Optional[str] = None, cron: Optional[str] = None):
     """Add a scheduled task to Celery Beat."""
     task_id = kwargs["task_id"]
     scheduled_time = scheduled_time if scheduled_time != None else (datetime.now() + timedelta(minutes=5)).isoformat()
