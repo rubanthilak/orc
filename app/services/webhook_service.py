@@ -14,12 +14,8 @@ def trigger_webhook(db: Session, task_id: int):
     webhook = task.webhook
     headers = json.loads(webhook.headers) if webhook.headers else {}
     body = json.loads(webhook.body) if webhook.body else {}
-
-    try:
-        response = requests.request(webhook.method.value, webhook.url, json=body, headers=headers)
-        save_result(db, task_id, response)
-    except Exception as e:
-        print("Webhook Service Error:", e)
+    response = requests.request(webhook.method.value, webhook.url, json=body, headers=headers)
+    save_result(db, task_id, response)
 
 def save_result(db: Session, task_id: int, response=None, error=None):
     """Save the result of task execution to the database."""

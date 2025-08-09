@@ -1,10 +1,8 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.models.webhook import Webhook
 from app.schemas.request.task_request import TaskRequest
 from app.models.task import Task
 from app.models.result import TaskResult
-from app.schemas.response.task_response import TaskResponse
 from lib.exception.not_found import NotFoundException
 
 def find_all(db: Session):
