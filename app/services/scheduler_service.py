@@ -18,4 +18,3 @@ def enqueue(task: callable, kwargs: dict, scheduled_time: str = None, cron: str 
             task.s(**kwargs), 
             f"{task.__name__}_{task_id}"
         )
- 

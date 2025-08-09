@@ -7,7 +7,7 @@ from config.environment import init
 init()
 
 # Retrieve the DATABASE_URL from environment variables
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./test.db"
 
 # Create engine and metadata
 database = Database(DATABASE_URL)
