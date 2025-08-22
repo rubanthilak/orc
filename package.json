@@ -1,0 +1,17 @@
+{
+  "name": "orc",
+  "version": "1.0.0",
+  "description": "Lightweight webhook scheduling service",
+  "main": "index.js",
+  "scripts": {
+    "dev:ui": "cd ui && pnpm dev",
+    "dev:api": "cd api && python -m uvicorn app.main:app --reload",
+    "dev": "concurrently \"pnpm dev:ui\" \"pnpm dev:api\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  },
+  "keywords": ["fullstack", "typescript", "react", "fastapi", "python", "vite", "pnpm", "monorepo"],
+  "author": "Ruban Thilak",
+  "license": "ISC"
+}
