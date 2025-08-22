@@ -18,6 +18,9 @@ venv
 .env
 .env.local
 
+# Local environment
+venv
+
 # IDE
 .vscode/*
 !.vscode/extensions.json
